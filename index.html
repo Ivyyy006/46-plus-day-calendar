@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Coverage Start Date — Popup Calendar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Coming+Soon&display=swap" rel="stylesheet">
+  <style>
+    :root { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; color:#303849; background:#fff; color-scheme:light; }
+    * {box-sizing:border-box;}
+    html,body {padding:0;margin:0; width:100%;overflow:visible;}
+    body {padding:2px 3px 5px;}
+    .field {width:100%;max-width:100%;margin:0 auto;}
+    .question-heading {position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px;padding:0 1px;}
+    .question-label {font-family:"Coming Soon","Comic Sans MS",cursive;font-size:20px;line-height:1.5;font-weight:400;color:#444852;}
+    .required {font-size:16px;color:#d26370;margin-left:7px;font-family:Arial,sans-serif;}
+    .info-button {display:flex;align-items:center;justify-content:center;width:27px;height:27px;flex:none;border:0;border-radius:50%;background:#6f8290;color:white;font-family:Arial,sans-serif;font-size:17px;font-weight:700;cursor:pointer;}
+    .info-button:hover,.info-button[aria-expanded="true"] {background:#526c7e;}
+    .info-button:focus-visible {outline:3px solid #748dc8;outline-offset:2px;}
+    /* Match the other Jotform ? tooltips: floating gray bubble, never an extra paragraph. */
+    .helptext {position:absolute;z-index:20;top:calc(100% + 5px);right:0;
+      width:min(310px,calc(100vw - 18px));margin:0;padding:11px 14px;
+      border-radius:7px;background:#6e8290;color:#fff;
+      box-shadow:0 5px 18px rgba(33,42,60,.18);pointer-events:none;
+      font-family:"Coming Soon",Arial,sans-serif;font-size:13px;
+      line-height:1.55;white-space:pre-line;}
+    .helptext:before {content:"";position:absolute;right:10px;top:-7px;
+      border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:8px solid #6e8290;}
+    .helptext[hidden] {display:none;}
+    button {font:inherit;}
+    .trigger {width:100%;min-height:51px;display:flex;align-items:center;gap:11px;text-align:left;border:1.5px solid #c8ced8;border-radius:7px;background:#fff;padding:8px 12px;cursor:pointer;color:#303849;}
+    .trigger:hover {border-color:#98a6b9;}
+    .trigger:focus-visible,.nav button:focus-visible,.day:focus-visible,.clear:focus-visible {outline:3px solid #748dc8;outline-offset:2px;}
+    .trigger[aria-expanded="true"] {border-color:#718bb8;box-shadow:0 0 0 2px #dce5f4;}
+    .cal-icon {width:22px;height:22px;flex:none;color:#b3c49c;}
+    .value {font-size:16px;letter-spacing:.25px;color:#343d4a;}
+    .value.placeholder {color:#b8bbc4;}
+    .chevron {margin-left:auto;width:16px;height:16px;color:#7a8290;flex:none;}
+    .popup {margin-top:7px;padding:12px 11px 10px;border:1px solid #e0e5eb;border-radius:11px;background:#fff;box-shadow:0 3px 13px rgba(23,38,63,.12);}
+    .popup[hidden] {display:none;}
+    .topline {margin:0 0 7px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+    .header {margin:0;font-size:16px;font-weight:650;letter-spacing:-.2px;}
+    .nav {display:flex;gap:6px;}
+    .nav button {border:1px solid #e0e4eb;background:#fff;color:#414b58;border-radius:8px;width:34px;height:34px;cursor:pointer;}
+    .nav button:disabled {opacity:.25;cursor:default;}
+    .weekdays,.days {display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px;}
+    .weekdays span {font-size:11px;color:#7b8390;font-weight:650;text-align:center;padding:6px 0;}
+    .day,.empty {height:35px;min-width:0;}
+    .day {border:0;border-radius:7px;background:transparent;color:#2c3441;cursor:pointer;font-size:14px;}
+    .day:hover:not(:disabled) {background:#e9f0e0;}
+    .day:disabled {color:#c7ccd4;cursor:default;}
+    .day.selected {background:#657e54;color:#fff;font-weight:700;}
+    .today {box-shadow:inset 0 0 0 1px #9da8b6;}
+    .footer {display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:7px;min-height:20px;}
+    .hint {margin:0;font-size:11px;line-height:1.35;color:#747c87;}
+    .clear {font-size:12px;color:#4b6841;background:none;border:0;padding:4px;cursor:pointer;white-space:nowrap;}
+    .error {color:#a72c3c;font-size:12px;line-height:1.3;margin:5px 0 0;}
+    .error:empty {display:none;}
+    @media (max-width:330px) {.day,.empty {height:32px;} .trigger {gap:10px;} .popup {padding-left:7px;padding-right:7px;}}
+  </style>
+  <script src="https://js.jotform.com/JotFormCustomWidget.min.js"></script>
+</head>
+<body>
+  <main class="field" aria-label="Preferred coverage start date picker">
+    <div class="question-heading">
+      <span class="question-label" id="questionLabel">Choose a Date <span class="required" aria-label="required">*</span></span>
+      <button id="infoButton" class="info-button" type="button" aria-label="More information about preferred coverage start date" aria-expanded="false" aria-controls="helpText" aria-describedby="helpText">?</button>
+    <div class="helptext" role="tooltip" id="helpText" hidden>Please select your preferred coverage start date. This helps us explore available options and estimated pricing for your desired timeframe.
+
+Rates and availability may vary, but we'll review and confirm the details together before enrollment.</div>
+    </div>
+    <button class="trigger" id="trigger" type="button" aria-label="Choose a coverage start date" aria-haspopup="dialog" aria-expanded="false" aria-controls="picker">
+      <svg class="cal-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/><rect x="7.5" y="13.5" width="3" height="3" rx=".4" fill="currentColor" stroke="none"/></svg>
+      <span id="fieldValue" class="value placeholder">MM.DD.YYYY</span>
+      <svg class="chevron" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+    </button>
+    <section class="popup" id="picker" role="dialog" aria-label="Choose a preferred coverage start date" hidden>
+      <div class="topline">
+        <h2 class="header" id="monthLabel" aria-live="polite"></h2>
+        <div class="nav">
+          <button type="button" id="prev" aria-label="Previous month">&#8249;</button>
+          <button type="button" id="next" aria-label="Next month">&#8250;</button>
+        </div>
+      </div>
+      <div class="weekdays" aria-hidden="true"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+      <div class="days" id="days" role="group" aria-label="Available coverage start dates"></div>
+      <div class="footer"><button class="clear" id="clear" type="button" hidden>Clear date</button></div>
+    </section>
+    <p id="error" class="error" role="alert" aria-live="polite"></p>
+  </main>
+<script>
+(function(){
+  'use strict';
+  const OFFSET_DAYS=46;
+  const el={
+    trigger:document.getElementById('trigger'),value:document.getElementById('fieldValue'),
+    info:document.getElementById('infoButton'),help:document.getElementById('helpText'),
+    picker:document.getElementById('picker'),month:document.getElementById('monthLabel'),days:document.getElementById('days'),
+    prev:document.getElementById('prev'),next:document.getElementById('next'),clear:document.getElementById('clear'),error:document.getElementById('error')
+  };
+  const fmtMonth=new Intl.DateTimeFormat('en-US',{month:'long',year:'numeric'});
+  const fmtDay=new Intl.DateTimeFormat('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  function startOfDay(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate());}
+  function minDate(){const d=startOfDay(new Date());return new Date(d.getFullYear(),d.getMonth(),d.getDate()+OFFSET_DAYS);}
+  function iso(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+  function pretty(d){return String(d.getMonth()+1).padStart(2,'0')+'.'+String(d.getDate()).padStart(2,'0')+'.'+d.getFullYear();}
+  function parseIso(s){if(typeof s!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(s))return null;const [y,m,d]=s.split('-').map(Number);const val=new Date(y,m-1,d);return iso(val)===s?val:null;}
+  function firstOf(d){return new Date(d.getFullYear(),d.getMonth(),1);}
+  function sameMonth(a,b){return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth();}
+  let shown=firstOf(minDate()), selected=null,ready=false;
+  function isValid(){return !!selected&&selected.getTime()>=minDate().getTime();}
+  function transmit(){if(ready&&window.JFCustomWidget)JFCustomWidget.sendData({valid:isValid(),value:isValid()?iso(selected):''});}
+  function resize(){if(!ready||!window.JFCustomWidget)return;
+    // Resize the REGISTERED Jotform widget iframe when the popup opens/closes.
+    requestAnimationFrame(()=>{
+      // Absolute-positioned tooltip must be included explicitly; it never pushes the field downward.
+      let height=document.body.scrollHeight+6;
+      if(!el.help.hidden){const r=el.help.getBoundingClientRect();height=Math.max(height,r.bottom+8);}
+      JFCustomWidget.requestFrameResize({height:Math.max(102,Math.ceil(height))});
+    });
+  }
+  function draw(){
+    const min=minDate(),minMonth=firstOf(min);
+    if(selected&&selected<min){selected=null;transmit();}
+    if(shown<minMonth)shown=minMonth;
+    el.month.textContent=fmtMonth.format(shown);
+    el.prev.disabled=sameMonth(shown,minMonth);
+    el.days.replaceChildren();
+    const offset=(shown.getDay()+6)%7; // Monday is first column.
+    for(let i=0;i<offset;i++){const spacer=document.createElement('span');spacer.className='empty';spacer.setAttribute('aria-hidden','true');el.days.appendChild(spacer);}
+    const n=new Date(shown.getFullYear(),shown.getMonth()+1,0).getDate();
+    for(let i=1;i<=n;i++){
+      const d=new Date(shown.getFullYear(),shown.getMonth(),i), b=document.createElement('button');
+      b.className='day';b.type='button';b.textContent=String(i);b.disabled=d<min;
+      b.setAttribute('aria-label',fmtDay.format(d));b.setAttribute('aria-pressed',String(!!selected&&iso(d)===iso(selected)));
+      if(iso(d)===iso(startOfDay(new Date())))b.classList.add('today');
+      if(selected&&iso(d)===iso(selected))b.classList.add('selected');
+      b.addEventListener('click',()=>{
+        if(d<minDate())return;
+        selected=d;el.error.textContent='';transmit();close();draw();
+      });
+      el.days.appendChild(b);
+    }
+    el.value.textContent=selected?pretty(selected):'MM.DD.YYYY';
+    el.value.classList.toggle('placeholder',!selected);
+    el.clear.hidden=!selected;
+    resize();
+  }
+  function open(){
+    if(!selected)shown=firstOf(minDate()); else shown=firstOf(selected);
+    el.picker.hidden=false;el.trigger.setAttribute('aria-expanded','true');draw();
+  }
+  function close(){el.picker.hidden=true;el.trigger.setAttribute('aria-expanded','false');resize();}
+  function setHelp(visible){el.help.hidden=!visible;el.info.setAttribute('aria-expanded',String(visible));resize();}
+  // Same interaction as a Jotform question-mark: hover on desktop; tap to toggle on mobile.
+  el.info.addEventListener('pointerenter',e=>{if(e.pointerType==='mouse')setHelp(true);});
+  el.info.addEventListener('pointerleave',e=>{if(e.pointerType==='mouse')setHelp(false);});
+  el.info.addEventListener('click',e=>{
+    // Mouse click on a hovered ? leaves the tooltip visible. Touch toggles it.
+    if(e.detail && window.matchMedia('(hover: hover) and (pointer: fine)').matches)setHelp(true);
+    else setHelp(el.help.hidden);
+  });
+  el.info.addEventListener('focus',()=>{if(window.matchMedia('(hover: hover) and (pointer: fine)').matches)setHelp(true);});
+  el.info.addEventListener('blur',()=>{if(!el.help.matches(':hover'))setHelp(false);});
+  document.addEventListener('pointerdown',e=>{if(!el.help.hidden&&!el.help.contains(e.target)&&!el.info.contains(e.target))setHelp(false);});
+  el.trigger.addEventListener('click',()=>{if(!el.help.hidden)setHelp(false);el.picker.hidden?open():close();});
+  el.prev.addEventListener('click',()=>{shown=new Date(shown.getFullYear(),shown.getMonth()-1,1);draw();});
+  el.next.addEventListener('click',()=>{shown=new Date(shown.getFullYear(),shown.getMonth()+1,1);draw();});
+  el.clear.addEventListener('click',()=>{selected=null;el.error.textContent='';transmit();draw();el.trigger.focus();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!el.help.hidden){setHelp(false);el.info.focus();}else if(!el.picker.hidden){close();el.trigger.focus();}}});
+  draw();
+  if(window.JFCustomWidget&&typeof JFCustomWidget.subscribe==='function'){
+    JFCustomWidget.subscribe('ready',data=>{
+      ready=true;
+      // Optional Jotform User Parameter: HoverText. When not configured, use the built-in hover text.
+      try {
+        const helpSetting=JFCustomWidget.getWidgetSetting('HoverText');
+        if(typeof helpSetting==='string'&&helpSetting.trim())el.help.textContent=helpSetting.trim();
+      } catch (_) { /* Widget still works without an optional parameter. */ }
+      const old=parseIso(data&&data.value);
+      if(old&&old>=minDate())selected=old;
+      draw();transmit();resize();
+      JFCustomWidget.subscribe('submit',()=>{
+        const valid=isValid();
+        if(!valid){el.error.textContent='Please choose your preferred coverage start date.';open();}
+        JFCustomWidget.sendSubmit({valid:valid,value:valid?iso(selected):''});resize();
+      });
+    });
+  }
+})();
+</script>
+</body>
+</html>
