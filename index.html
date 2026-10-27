@@ -64,14 +64,23 @@ button:focus:not(:focus-visible) {
 /* The date field and its calendar read as ONE bordered panel,
    exactly like Field #28: the field is the panel's top row, the
    calendar attaches directly beneath it sharing the same border. */
+/* One unified panel: the field row and the calendar share the
+   same width and one continuous border, exactly like Field #28.
+   The panel wrapper exists so the two pieces can never drift to
+   different widths, and so the help disc can sit on the panel's
+   top-right corner without taking up layout width. */
+.panel {
+  position: relative;
+  width: min(400px, 100%);
+  margin: 0 auto;
+}
+
 .controlrow {
   position: relative;
   z-index: 2;
   display: flex;
-  width: min(400px, 100%);
-  margin: 0 auto;
+  width: 100%;
   align-items: center;
-  gap: 8px;
   cursor: default;
 }
 
@@ -80,8 +89,11 @@ button:focus:not(:focus-visible) {
    field. The 40px button box is the touch target; the visible
    disc is 24px. */
 .help-btn {
+  position: absolute;
+  z-index: 30;
+  top: -20px;
+  right: -20px;
   display: flex;
-  flex: none;
   width: 40px;
   height: 40px;
   margin: 0;
@@ -206,8 +218,8 @@ button:focus:not(:focus-visible) {
 .popup {
   position: relative;
   z-index: 2;
-  width: min(400px, 100%);
-  margin: -1px auto 0;
+  width: 100%;
+  margin: -1px 0 0;
   padding: 0;
   overflow: hidden;
   border: 1px solid #303849;
@@ -429,18 +441,14 @@ button:focus:not(:focus-visible) {
 </head>
 <body>
   <main class="field" aria-label="Preferred coverage start date picker">
-    <div class="controlrow">
-      <button class="trigger" id="trigger" type="button" aria-label="Choose a coverage start date" aria-haspopup="dialog" aria-expanded="false" aria-controls="picker" aria-describedby="helpText">
-        <span id="fieldValue" class="value placeholder">MM.DD.YYYY</span>
-        <svg class="cal-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/><rect x="7.5" y="13.5" width="3" height="3" rx=".4" fill="currentColor" stroke="none"/></svg>
-      </button>
-      <button class="help-btn" id="helpBtn" type="button" aria-label="Show more information about your preferred coverage start date" aria-expanded="false" aria-controls="helpLayer"><span class="help-ico" aria-hidden="true">?</span></button>
-    </div>
-      <div class="help-layer" id="helpLayer" hidden>
-        <div class="helptext" role="tooltip" id="helpText">Please select your preferred coverage start date. This helps us explore available options and estimated pricing for your desired timeframe.
-
-Rates and availability may vary, but we'll review and confirm the details together before enrollment.</div>
+    <div class="panel">
+      <div class="controlrow">
+        <button class="trigger" id="trigger" type="button" aria-label="Choose a coverage start date" aria-haspopup="dialog" aria-expanded="false" aria-controls="picker" aria-describedby="helpText">
+          <span id="fieldValue" class="value placeholder">MM.DD.YYYY</span>
+          <svg class="cal-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/><rect x="7.5" y="13.5" width="3" height="3" rx=".4" fill="currentColor" stroke="none"/></svg>
+        </button>
       </div>
+      <button class="help-btn" id="helpBtn" type="button" aria-label="Show more information about your preferred coverage start date" aria-expanded="false" aria-controls="helpLayer"><span class="help-ico" aria-hidden="true">?</span></button>
     <section class="popup" id="picker" role="dialog" aria-label="Choose a preferred coverage start date" hidden>
       <div class="topline">
         <h2 class="header" id="monthLabel" aria-live="polite"><span class="mname" id="monthName"></span><span class="yname" id="yearName"></span></h2>
@@ -453,6 +461,12 @@ Rates and availability may vary, but we'll review and confirm the details togeth
       <div class="days" id="days" role="group" aria-label="Available coverage start dates"></div>
       <div class="footer"><button class="clear" id="clear" type="button" hidden>Clear date</button></div>
     </section>
+      <div class="help-layer" id="helpLayer" hidden>
+        <div class="helptext" role="tooltip" id="helpText">Please select your preferred coverage start date. This helps us explore available options and estimated pricing for your desired timeframe.
+
+Rates and availability may vary, but we'll review and confirm the details together before enrollment.</div>
+      </div>
+    </div>
     <p id="error" class="error" role="alert" aria-live="polite"></p>
   </main>
 <script>
