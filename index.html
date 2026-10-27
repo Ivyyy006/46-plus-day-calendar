@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Coverage Start Date — Popup Calendar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caudex:wght@400;700&family=Coming+Soon&display=swap" rel="stylesheet">
+  <style>
+:root {
+  font-family: "Caudex", Georgia, serif;
+  color: #303849;
+  background: transparent;
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+}
+
+body {
+  background: transparent;
+}
+
+button {
+  font: inherit;
+}
+
+/* Palette-consistent keyboard focus everywhere; no UA blue rings. */
+button:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.trigger:focus-visible,
+.nav button:focus-visible,
+.day:focus-visible,
+.clear:focus-visible,
+.help-btn:focus-visible {
+  outline: 2px solid #C3A263;
+  outline-offset: 2px;
+}
+
+.field {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  min-height: 116px;
+  margin: 0 auto;
+  padding: 27px 18px 39px;
+  background: transparent;
+}
+
+/* The date field and its calendar read as ONE bordered panel,
+   exactly like Field #28: the field is the panel's top row, the
+   calendar attaches directly beneath it sharing the same border. */
+.controlrow {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  width: min(400px, 100%);
+  margin: 0 auto;
+  align-items: center;
+  gap: 8px;
+  cursor: default;
+}
+
+/* Help icon: matches the form's native help disc — a filled
+   deep-forest circle with a white "?", at the top right of the
+   field. The 40px button box is the touch target; the visible
+   disc is 24px. */
+.help-btn {
+  display: flex;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  margin: 0;
+  padding: 0;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.help-ico {
+  display: flex;
+  width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 50%;
+  background: #244536;
+  color: #FFFFFF;
+  font-family: "Caudex", Georgia, serif;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.help-btn:hover .help-ico {
+  background: #4D665E;
+}
+
+/* Help tooltip: matches the form's native help pop-up — a large
+   smoky-eucalyptus panel, white Caudex text, generous padding,
+   soft radius, NO triangular pointer. Sits below the field so it
+   never covers the calendar controls, and wraps within the field
+   on mobile. The widget's own help wording is preserved. */
+.help-layer {
+  position: absolute;
+  z-index: 20;
+  top: calc(27px + 44px + 8px);
+  left: 18px;
+  right: 18px;
+  pointer-events: none;
+}
+
+.help-layer[hidden] {
+  display: none;
+}
+
+.helptext {
+  margin: 0;
+  padding: 18px 20px;
+  border: 0;
+  border-radius: 14px;
+  background: #4D665E;
+  box-shadow: 0 4px 14px rgba(24, 45, 60, 0.18);
+  color: #FFFFFF;
+  font-family: "Caudex", Georgia, serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.4;
+  white-space: pre-line;
+}
+
+.trigger,
+.popup,
+.popup button {
+  cursor: pointer;
+}
+
+/* Top row of the panel: the chosen date at the left, calendar
+   glyph at the right, like Field #28's date field. */
+.trigger {
+  display: flex;
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 6px 12px;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid #303849;
+  border-radius: 8px;
+  background: #FFFFFF;
+  color: #303849;
+  text-align: left;
+}
+
+.trigger:hover {
+  border-color: #244536;
+}
+
+.trigger[aria-expanded="true"] {
+  border-color: #303849;
+}
+
+.field.is-open .trigger {
+  border-radius: 8px 8px 0 0;
+}
+
+.cal-icon {
+  width: 20px;
+  height: 20px;
+  margin-left: auto;
+  flex: none;
+  color: #303849;
+}
+
+.value {
+  color: #303849;
+  font-size: 16px;
+  letter-spacing: 0.25px;
+}
+
+.value.placeholder {
+  color: #788D67;
+  opacity: 0.72;
+}
+
+/* Calendar body of the panel: attaches under the field row,
+   sharing its border and width, square top corners. */
+.popup {
+  position: relative;
+  z-index: 2;
+  width: min(400px, 100%);
+  margin: -1px auto 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #303849;
+  border-top: 0;
+  border-radius: 0 0 8px 8px;
+  background: #FFFFFF;
+  box-shadow: none;
+}
+
+.popup[hidden] {
+  display: none;
+}
+
+/* Month | Year row, as in Field #28: two plain-text cells (month
+   wider, year narrower) split by a thin vertical divider, rule
+   underneath, small quiet month steppers at the right edge. */
+.topline {
+  display: flex;
+  min-height: 54px;
+  margin: 0;
+  padding: 0 4px 0 0;
+  align-items: stretch;
+  justify-content: space-between;
+  border-bottom: 1px solid #303849;
+}
+
+.header {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  align-items: stretch;
+  color: #303849;
+  font-size: 19px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.header .mname {
+  display: flex;
+  flex: 1.22 1 0;
+  align-items: center;
+  padding: 0 12px;
+}
+
+.header .yname {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  padding: 0 12px;
+  border-left: 1px solid rgba(48, 56, 73, 0.35);
+}
+
+.nav {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+}
+
+.nav button {
+  width: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #303849;
+  font-size: 19px;
+  line-height: 1;
+}
+
+.nav button:hover:not(:disabled) {
+  color: #244536;
+  background: #F8F6F0;
+}
+
+.nav button:disabled {
+  opacity: 0.25;
+  cursor: default;
+}
+
+.weekdays,
+.days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+/* Weekday headings as in Field #28: all-caps, regular weight,
+   centered, no fill. */
+.weekdays {
+  padding: 8px 10px 0;
+}
+
+.weekdays span {
+  display: flex;
+  min-width: 0;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  color: #303849;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/* Date cells as in Field #28: large Caudex numerals in tall,
+   airy rows; available dates are ivory rounded rectangles with
+   small gaps; disabled dates are plain white with full-strength
+   text and no fill (no dimming); today is a thin charcoal
+   outline only; the selected date is ivory fill + outline. */
+.days {
+  gap: 6px;
+  padding: 10px;
+}
+
+.day,
+.empty {
+  min-width: 0;
+  height: 52px;
+}
+
+.day {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: #303849;
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.day:not(:disabled) {
+  background: #F8F6F0;
+}
+
+.day:hover:not(:disabled) {
+  border-color: #244536;
+  background: #F8F6F0;
+}
+
+.day:disabled {
+  color: #303849;
+  cursor: default;
+}
+
+.day.today {
+  border-color: #303849;
+}
+
+.day.selected {
+  border-color: #303849;
+  background: #F8F6F0;
+}
+
+.footer {
+  display: flex;
+  min-height: 27px;
+  margin: 0;
+  padding: 0 8px 4px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.hint {
+  margin: 0;
+  color: #4D665E;
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+.clear {
+  padding: 4px;
+  border: 0;
+  background: none;
+  color: #4D665E;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.error {
+  margin: 5px 0 0;
+  color: #741921;
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.error:empty {
+  display: none;
+}
+
+@media (max-width: 330px) {
+  .header {
+    font-size: 17px;
+  }
+
+  .day,
+  .empty {
+    height: 46px;
+  }
+
+  .day {
+    font-size: 16px;
+  }
+
+  .helptext {
+    padding: 16px;
+    font-size: 15px;
+  }
+}
+
+  </style>
+  <script src="https://js.jotform.com/JotFormCustomWidget.min.js"></script>
+</head>
+<body>
+  <main class="field" aria-label="Preferred coverage start date picker">
+    <div class="controlrow">
+      <button class="trigger" id="trigger" type="button" aria-label="Choose a coverage start date" aria-haspopup="dialog" aria-expanded="false" aria-controls="picker" aria-describedby="helpText">
+        <span id="fieldValue" class="value placeholder">MM.DD.YYYY</span>
+        <svg class="cal-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/><rect x="7.5" y="13.5" width="3" height="3" rx=".4" fill="currentColor" stroke="none"/></svg>
+      </button>
+      <button class="help-btn" id="helpBtn" type="button" aria-label="Show more information about your preferred coverage start date" aria-expanded="false" aria-controls="helpLayer"><span class="help-ico" aria-hidden="true">?</span></button>
+    </div>
+      <div class="help-layer" id="helpLayer" hidden>
+        <div class="helptext" role="tooltip" id="helpText">Please select your preferred coverage start date. This helps us explore available options and estimated pricing for your desired timeframe.
+
+Rates and availability may vary, but we'll review and confirm the details together before enrollment.</div>
+      </div>
+    <section class="popup" id="picker" role="dialog" aria-label="Choose a preferred coverage start date" hidden>
+      <div class="topline">
+        <h2 class="header" id="monthLabel" aria-live="polite"><span class="mname" id="monthName"></span><span class="yname" id="yearName"></span></h2>
+        <div class="nav">
+          <button type="button" id="prev" aria-label="Previous month">&#8249;</button>
+          <button type="button" id="next" aria-label="Next month">&#8250;</button>
+        </div>
+      </div>
+      <div class="weekdays" aria-hidden="true"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+      <div class="days" id="days" role="group" aria-label="Available coverage start dates"></div>
+      <div class="footer"><button class="clear" id="clear" type="button" hidden>Clear date</button></div>
+    </section>
+    <p id="error" class="error" role="alert" aria-live="polite"></p>
+  </main>
+<script>
+(function(){
+  'use strict';
+  const OFFSET_DAYS=46;
+  const el={
+    trigger:document.getElementById('trigger'),value:document.getElementById('fieldValue'),
+    help:document.getElementById('helpLayer'),helpText:document.getElementById('helpText'),helpBtn:document.getElementById('helpBtn'),
+    picker:document.getElementById('picker'),monthName:document.getElementById('monthName'),yearName:document.getElementById('yearName'),days:document.getElementById('days'),
+    prev:document.getElementById('prev'),next:document.getElementById('next'),clear:document.getElementById('clear'),error:document.getElementById('error')
+  };
+  const fmtMonthName=new Intl.DateTimeFormat('en-US',{month:'long'});
+  const fmtYear=new Intl.DateTimeFormat('en-US',{year:'numeric'});
+  const fmtDay=new Intl.DateTimeFormat('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  function startOfDay(d){return new Date(d.getFullYear(),d.getMonth(),d.getDate());}
+  function minDate(){const d=startOfDay(new Date());return new Date(d.getFullYear(),d.getMonth(),d.getDate()+OFFSET_DAYS);}
+  function iso(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+  function pretty(d){return String(d.getMonth()+1).padStart(2,'0')+'.'+String(d.getDate()).padStart(2,'0')+'.'+d.getFullYear();}
+  function parseIso(s){if(typeof s!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(s))return null;const [y,m,d]=s.split('-').map(Number);const val=new Date(y,m-1,d);return iso(val)===s?val:null;}
+  function firstOf(d){return new Date(d.getFullYear(),d.getMonth(),1);}
+  function sameMonth(a,b){return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth();}
+  let shown=firstOf(minDate()), selected=null,ready=false;
+  const field=document.querySelector('.field');
+  function isValid(){return !!selected&&selected.getTime()>=minDate().getTime();}
+  function transmit(){if(ready&&window.JFCustomWidget)JFCustomWidget.sendData({valid:isValid(),value:isValid()?iso(selected):''});}
+  function resize(){if(!ready||!window.JFCustomWidget)return;
+    // Resize the registered widget iframe for the popup or floating tooltip.
+    requestAnimationFrame(()=>{
+      // Allow the transparent help zone when closed, expanding for popup or tooltip as needed.
+      let height=document.body.scrollHeight+6;
+      if(!el.help.hidden){const r=el.help.getBoundingClientRect();height=Math.max(height,r.bottom+8);}
+      JFCustomWidget.requestFrameResize({height:Math.max(116,Math.ceil(height))});
+    });
+  }
+  function draw(){
+    const min=minDate(),minMonth=firstOf(min);
+    if(selected&&selected<min){selected=null;transmit();}
+    if(shown<minMonth)shown=minMonth;
+    el.monthName.textContent=fmtMonthName.format(shown);
+    el.yearName.textContent=fmtYear.format(shown);
+    el.prev.disabled=sameMonth(shown,minMonth);
+    el.days.replaceChildren();
+    const offset=(shown.getDay()+6)%7; // Monday is first column.
+    for(let i=0;i<offset;i++){const spacer=document.createElement('span');spacer.className='empty';spacer.setAttribute('aria-hidden','true');el.days.appendChild(spacer);}
+    const n=new Date(shown.getFullYear(),shown.getMonth()+1,0).getDate();
+    for(let i=1;i<=n;i++){
+      const d=new Date(shown.getFullYear(),shown.getMonth(),i), b=document.createElement('button');
+      b.className='day';b.type='button';b.textContent=String(i);b.disabled=d<min;
+      b.setAttribute('aria-label',fmtDay.format(d));b.setAttribute('aria-pressed',String(!!selected&&iso(d)===iso(selected)));
+      if(iso(d)===iso(startOfDay(new Date())))b.classList.add('today');
+      if(selected&&iso(d)===iso(selected))b.classList.add('selected');
+      b.addEventListener('click',()=>{
+        if(d<minDate())return;
+        selected=d;el.error.textContent='';transmit();setHelp(false);close();draw();
+      });
+      el.days.appendChild(b);
+    }
+    el.value.textContent=selected?pretty(selected):'MM.DD.YYYY';
+    el.value.classList.toggle('placeholder',!selected);
+    el.clear.hidden=!selected;
+    resize();
+  }
+  function open(){
+    if(!selected)shown=firstOf(minDate()); else shown=firstOf(selected);
+    setHelp(false); el.picker.hidden=false;el.trigger.setAttribute('aria-expanded','true');field.classList.add('is-open');draw();
+  }
+  function close(){el.picker.hidden=true;el.trigger.setAttribute('aria-expanded','false');field.classList.remove('is-open');setHelp(false);resize();}
+  function setHelp(visible){
+    if(el.help.hidden===!visible)return;
+    el.help.hidden=!visible;
+    el.helpBtn.setAttribute('aria-expanded',String(visible));
+    resize();
+  }
+  // Help is tied to its own icon button only: hover shows it on desktop,
+  // tap/click toggles it, and it never interferes with the date field.
+  el.helpBtn.addEventListener('click',()=>{
+    if(!el.picker.hidden)close();
+    setHelp(el.help.hidden);
+  });
+  el.helpBtn.addEventListener('pointerenter',event=>{
+    if(event.pointerType==='mouse'&&el.picker.hidden)setHelp(true);
+  });
+  el.helpBtn.addEventListener('pointerleave',event=>{
+    if(event.pointerType==='mouse')setHelp(false);
+  });
+  el.trigger.addEventListener('click',()=>{
+    if(el.picker.hidden)open();else close();
+  });
+  document.addEventListener('pointerdown',event=>{
+    if(!field.contains(event.target))setHelp(false);
+  });
+  el.prev.addEventListener('click',()=>{shown=new Date(shown.getFullYear(),shown.getMonth()-1,1);draw();});
+  el.next.addEventListener('click',()=>{shown=new Date(shown.getFullYear(),shown.getMonth()+1,1);draw();});
+  el.clear.addEventListener('click',()=>{selected=null;el.error.textContent='';transmit();draw();el.trigger.focus();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(!el.help.hidden){setHelp(false);}else if(!el.picker.hidden){close();el.trigger.focus();}}});
+  draw();
+  if(window.JFCustomWidget&&typeof JFCustomWidget.subscribe==='function'){
+    JFCustomWidget.subscribe('ready',data=>{
+      ready=true;
+      // Optional Jotform User Parameter: HoverText. When not configured, use the built-in hover text.
+      try {
+        const helpSetting=JFCustomWidget.getWidgetSetting('HoverText');
+        if(typeof helpSetting==='string'&&helpSetting.trim())el.helpText.textContent=helpSetting.trim();
+      } catch (_) { /* Widget still works without an optional parameter. */ }
+      const old=parseIso(data&&data.value);
+      if(old&&old>=minDate())selected=old;
+      draw();transmit();resize();
+      JFCustomWidget.subscribe('submit',()=>{
+        const valid=isValid();
+        if(!valid){el.error.textContent='Please choose your preferred coverage start date.';open();}
+        JFCustomWidget.sendSubmit({valid:valid,value:valid?iso(selected):''});resize();
+      });
+    });
+  }
+})();
+</script>
+</body>
+</html>
