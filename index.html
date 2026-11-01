@@ -493,6 +493,23 @@ Rates and availability may vary, but we'll review and confirm the details togeth
   function sameMonth(a,b){return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth();}
   let shown=firstOf(minDate()), selected=null,ready=false;
   const field=document.querySelector('.field');
+  // Enable help placement only for the authorized test clone.
+  let stationaryHelpClone=false;
+  function configureStationaryHelp(formId){
+    const id=formId&&typeof formId==='object'?(formId.formId||formId.formID):formId;
+    if(String(id)!=='263031945610148')return;
+    stationaryHelpClone=true;
+    field.dataset.stationaryHelpClone='true';
+    const style=document.createElement('style');
+    style.textContent=`
+      html,body{overflow:hidden;}
+      #helpBtn{top:4px;right:40px;}
+      #fieldValue{box-sizing:border-box;padding-right:44px;}
+      #helpLayer{pointer-events:auto;}
+    `;
+    document.head.appendChild(style);
+  }
+
   function isValid(){return !!selected&&selected.getTime()>=minDate().getTime();}
   function transmit(){if(ready&&window.JFCustomWidget)JFCustomWidget.sendData({valid:isValid(),value:isValid()?iso(selected):''});}
   function resize(){if(!ready||!window.JFCustomWidget)return;
@@ -550,17 +567,20 @@ Rates and availability may vary, but we'll review and confirm the details togeth
     setHelp(el.help.hidden);
   });
   el.helpBtn.addEventListener('pointerenter',event=>{
-    if(event.pointerType==='mouse'&&el.picker.hidden)setHelp(true);
+    if(!stationaryHelpClone&&event.pointerType==='mouse'&&el.picker.hidden)setHelp(true);
   });
   el.helpBtn.addEventListener('pointerleave',event=>{
-    if(event.pointerType==='mouse')setHelp(false);
+    if(!stationaryHelpClone&&event.pointerType==='mouse')setHelp(false);
   });
   el.trigger.addEventListener('click',()=>{
     if(el.picker.hidden)open();else close();
   });
   document.addEventListener('pointerdown',event=>{
-    if(!field.contains(event.target))setHelp(false);
+    if(stationaryHelpClone
+      ? (!el.helpBtn.contains(event.target)&&!el.help.contains(event.target))
+      : !field.contains(event.target))setHelp(false);
   });
+  window.addEventListener('blur',()=>{if(stationaryHelpClone)setHelp(false);});
   el.prev.addEventListener('click',()=>{shown=new Date(shown.getFullYear(),shown.getMonth()-1,1);draw();});
   el.next.addEventListener('click',()=>{shown=new Date(shown.getFullYear(),shown.getMonth()+1,1);draw();});
   el.clear.addEventListener('click',()=>{selected=null;el.error.textContent='';transmit();draw();el.trigger.focus();});
@@ -569,6 +589,7 @@ Rates and availability may vary, but we'll review and confirm the details togeth
   if(window.JFCustomWidget&&typeof JFCustomWidget.subscribe==='function'){
     JFCustomWidget.subscribe('ready',data=>{
       ready=true;
+      configureStationaryHelp(data);
       // Optional Jotform User Parameter: HoverText. When not configured, use the built-in hover text.
       try {
         const helpSetting=JFCustomWidget.getWidgetSetting('HoverText');
