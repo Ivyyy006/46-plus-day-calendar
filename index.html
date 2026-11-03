@@ -91,8 +91,8 @@ button:focus:not(:focus-visible) {
 .help-btn {
   position: absolute;
   z-index: 30;
-  top: 4px;
-  right: 40px;
+  top: -36px;
+  right: -22px;
   display: flex;
   width: 36px;
   height: 36px;
@@ -105,7 +105,7 @@ button:focus:not(:focus-visible) {
   cursor: pointer;
 }
 
-.help-ico{
+.help-ico {
   display: flex;
   width: 24px;
   height: 24px;
@@ -113,18 +113,16 @@ button:focus:not(:focus-visible) {
   justify-content: center;
   border: 0;
   border-radius: 50%;
-  background: #E5EAE2;
-  color: #4D665E;
+  background: #244536;
+  color: #FFFFFF;
   font-family: "Caudex", Georgia, serif;
   font-size: 15px;
   font-weight: 700;
   line-height: 1;
-
-  box-shadow: inset 0 0 0 1px #A7BBAB;
 }
 
-.help-btn:hover .help-ico{
-  background: #E5EAE2;
+.help-btn:hover .help-ico {
+  background: #4D665E;
 }
 
 /* Help tooltip: matches the form's native help pop-up — a large
@@ -136,8 +134,8 @@ button:focus:not(:focus-visible) {
   position: absolute;
   z-index: 20;
   top: calc(34px + 44px + 8px);
-  left: 18px;
-  right: 18px;
+  left: 39px;
+  right: 39px;
   pointer-events: none;
 }
 
@@ -150,9 +148,9 @@ button:focus:not(:focus-visible) {
   padding: 18px 20px;
   border: 0;
   border-radius: 14px;
-  background: #F0F2ED;
-  box-shadow: inset 0 0 0 1px #A7BBAB;
-  color: #4D665E;
+  background: #4D665E;
+  box-shadow: 0 4px 14px rgba(24, 45, 60, 0.18);
+  color: #FFFFFF;
   font-family: "Caudex", Georgia, serif;
   font-size: 16px;
   font-weight: 400;
@@ -493,24 +491,6 @@ Rates and availability may vary, but we'll review and confirm the details togeth
   function sameMonth(a,b){return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth();}
   let shown=firstOf(minDate()), selected=null,ready=false;
   const field=document.querySelector('.field');
-  // Enable help placement only for the authorized test clone.
-  let stationaryHelpClone=false;
-  function configureStationaryHelp(formId){
-    const id=formId&&typeof formId==='object'?(formId.formId||formId.formID):formId;
-    if(String(id)!=='263031945610148')return;
-    stationaryHelpClone=true;
-    field.dataset.stationaryHelpClone='true';
-    const style=document.createElement('style');
-    style.textContent=`
-      html{overflow:hidden;}
-      body{overflow:visible;}
-      #helpBtn{top:4px;right:40px;}
-      #fieldValue{box-sizing:border-box;padding-right:44px;}
-      #helpLayer{pointer-events:auto;}
-    `;
-    document.head.appendChild(style);
-  }
-
   function isValid(){return !!selected&&selected.getTime()>=minDate().getTime();}
   function transmit(){if(ready&&window.JFCustomWidget)JFCustomWidget.sendData({valid:isValid(),value:isValid()?iso(selected):''});}
   function resize(){if(!ready||!window.JFCustomWidget)return;
@@ -568,20 +548,17 @@ Rates and availability may vary, but we'll review and confirm the details togeth
     setHelp(el.help.hidden);
   });
   el.helpBtn.addEventListener('pointerenter',event=>{
-    if(!stationaryHelpClone&&event.pointerType==='mouse'&&el.picker.hidden)setHelp(true);
+    if(event.pointerType==='mouse'&&el.picker.hidden)setHelp(true);
   });
   el.helpBtn.addEventListener('pointerleave',event=>{
-    if(!stationaryHelpClone&&event.pointerType==='mouse')setHelp(false);
+    if(event.pointerType==='mouse')setHelp(false);
   });
   el.trigger.addEventListener('click',()=>{
     if(el.picker.hidden)open();else close();
   });
   document.addEventListener('pointerdown',event=>{
-    if(stationaryHelpClone
-      ? (!el.helpBtn.contains(event.target)&&!el.help.contains(event.target))
-      : !field.contains(event.target))setHelp(false);
+    if(!field.contains(event.target))setHelp(false);
   });
-  window.addEventListener('blur',()=>{if(stationaryHelpClone)setHelp(false);});
   el.prev.addEventListener('click',()=>{shown=new Date(shown.getFullYear(),shown.getMonth()-1,1);draw();});
   el.next.addEventListener('click',()=>{shown=new Date(shown.getFullYear(),shown.getMonth()+1,1);draw();});
   el.clear.addEventListener('click',()=>{selected=null;el.error.textContent='';transmit();draw();el.trigger.focus();});
@@ -590,7 +567,6 @@ Rates and availability may vary, but we'll review and confirm the details togeth
   if(window.JFCustomWidget&&typeof JFCustomWidget.subscribe==='function'){
     JFCustomWidget.subscribe('ready',data=>{
       ready=true;
-      configureStationaryHelp(data);
       // Optional Jotform User Parameter: HoverText. When not configured, use the built-in hover text.
       try {
         const helpSetting=JFCustomWidget.getWidgetSetting('HoverText');
