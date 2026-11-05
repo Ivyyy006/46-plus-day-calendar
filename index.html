@@ -84,15 +84,12 @@ button:focus:not(:focus-visible) {
   cursor: default;
 }
 
-/* Help icon: matches the form's native help disc — a filled
-   deep-forest circle with a white "?", at the top right of the
-   field. The 40px button box is the touch target; the visible
-   disc is 24px. */
+/* Keep help aligned beside the calendar icon, inside the date row. */
 .help-btn {
   position: absolute;
   z-index: 30;
-  top: -36px;
-  right: -22px;
+  top: 4px;
+  right: 40px;
   display: flex;
   width: 36px;
   height: 36px;
@@ -113,8 +110,9 @@ button:focus:not(:focus-visible) {
   justify-content: center;
   border: 0;
   border-radius: 50%;
-  background: #244536;
-  color: #FFFFFF;
+  background: #E5EAE2;
+  color: #4D665E;
+  box-shadow: inset 0 0 0 1px #A7BBAB;
   font-family: "Caudex", Georgia, serif;
   font-size: 15px;
   font-weight: 700;
@@ -122,21 +120,17 @@ button:focus:not(:focus-visible) {
 }
 
 .help-btn:hover .help-ico {
-  background: #4D665E;
+  background: #E5EAE2;
 }
 
-/* Help tooltip: matches the form's native help pop-up — a large
-   smoky-eucalyptus panel, white Caudex text, generous padding,
-   soft radius, NO triangular pointer. Sits below the field so it
-   never covers the calendar controls, and wraps within the field
-   on mobile. The widget's own help wording is preserved. */
+/* Match the shared help panel palette and width. */
 .help-layer {
   position: absolute;
   z-index: 20;
-  top: calc(34px + 44px + 8px);
+  top: 52px;
   left: 50%;
   right: auto;
-  width: 312px;
+  width: min(312px, calc(100vw - 24px));
   transform: translateX(-50%);
   pointer-events: none;
 }
@@ -150,9 +144,9 @@ button:focus:not(:focus-visible) {
   padding: 18px 20px;
   border: 0;
   border-radius: 14px;
-  background: #4D665E;
-  box-shadow: 0 4px 14px rgba(24, 45, 60, 0.18);
-  color: #FFFFFF;
+  background: #F0F2ED;
+  box-shadow: inset 0 0 0 1px #A7BBAB;
+  color: #4D665E;
   font-family: "Caudex", Georgia, serif;
   font-size: 16px;
   font-weight: 400;
